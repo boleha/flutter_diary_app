@@ -5,14 +5,12 @@ import 'package:google_fonts/google_fonts.dart';
 class WriteDiaryHeader extends StatelessWidget {
   final DateTime selectedDate;
   final ValueListenable<bool> isLoadingListenable;
-  final VoidCallback onBack;
   final VoidCallback onSave;
 
   const WriteDiaryHeader({
     super.key,
     required this.selectedDate,
     required this.isLoadingListenable,
-    required this.onBack,
     required this.onSave,
   });
 
@@ -24,12 +22,6 @@ class WriteDiaryHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: onBack,
-            tooltip: '返回',
-          ),
-          const SizedBox(width: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
@@ -67,10 +59,7 @@ class WriteDiaryHeader extends StatelessWidget {
   Widget _buildDateText(String text, double fontSize, Color color) {
     return Text(
       text,
-      style: GoogleFonts.righteous(
-        fontSize: fontSize,
-        color: color,
-      ),
+      style: GoogleFonts.righteous(fontSize: fontSize, color: color),
     );
   }
 }
@@ -91,10 +80,7 @@ class WriteDiaryTimestamp extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 16),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: 11,
-          color: color,
-        ),
+        style: TextStyle(fontSize: 11, color: color),
         textAlign: TextAlign.center,
       ),
     );

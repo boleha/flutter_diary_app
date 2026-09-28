@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
 
 import '../models/diary_entry.dart';
 import '../theme/app_colors.dart';
+import 'custom_calendar_view.dart';
 import 'home_calendar_day_cell.dart';
 import 'home_calendar_entry_card.dart';
 import 'home_calendar_header.dart';
@@ -186,11 +186,6 @@ class _HomeCalendarDrawerState extends State<HomeCalendarDrawer> {
     );
   }
 
-  List<DiaryEntry> _getEventsForDay(DateTime day) {
-    final date = DateTime(day.year, day.month, day.day);
-    return widget.events[date] ?? const <DiaryEntry>[];
-  }
-
   List<DateTime> _getMonthDaysWithEntries() {
     _rebuildMonthCache();
     return _monthDaysWithEntriesCache;
@@ -256,6 +251,7 @@ class _HomeCalendarDrawerState extends State<HomeCalendarDrawer> {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Drawer(
+        backgroundColor: colors.background,
         child: SafeArea(
           child: ListView.builder(
             padding: EdgeInsets.zero,
@@ -280,158 +276,31 @@ class _HomeCalendarDrawerState extends State<HomeCalendarDrawer> {
                 return RepaintBoundary(
                   child: SizedBox(
                     height: 350,
-                    child: TableCalendar<DiaryEntry>(
-                      firstDay: DateTime.utc(2020, 1, 1),
-                      lastDay: DateTime.utc(2030, 12, 31),
+                    child: CustomCalendarView(
                       focusedDay: widget.focusedDay,
-                      rowHeight: 46,
-                      selectedDayPredicate: (day) => isSameDay(widget.selectedDay, day),
-                      eventLoader: _getEventsForDay,
+                      selectedDay: widget.selectedDay,
                       onDaySelected: widget.onCalendarDaySelected,
                       onPageChanged: widget.onCalendarPageChanged,
-                      calendarFormat: CalendarFormat.month,
-                      availableCalendarFormats: const {
-                        CalendarFormat.month: '月',
+                      dayBuilder:
+                          (context, day, isToday, isSelected, isOutside, isDisabled) {
+                        final normalizedDay =
+                            DateTime(day.year, day.month, day.day);
+                        final imagePath = _monthFirstImageCache[normalizedDay];
+                        final canRenderImage = imagePath != null &&
+                            widget.calendarImageRenderingEnabled &&
+                            _progressiveImageDayKeys
+                                .contains(_dayKey(normalizedDay));
+                        return HomeCalendarDayCell(
+                          day: day,
+                          imagePath: canRenderImage ? imagePath : null,
+                          calendarImageRenderingEnabled: canRenderImage,
+                          isToday: isToday,
+                          isSelected: isSelected,
+                          isOutside: isOutside,
+                          isDisabled: isDisabled,
+                          getCachedImageFile: _getCachedImageFile,
+                        );
                       },
-                      sixWeekMonthsEnforced: true,
-                      headerVisible: false,
-                      calendarStyle: CalendarStyle(
-                        markersMaxCount: 1,
-                        markerDecoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        selectedDecoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        todayDecoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          shape: BoxShape.circle,
-                        ),
-                        todayTextStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      daysOfWeekStyle: DaysOfWeekStyle(
-                        weekdayStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        weekendStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      locale: 'en_US',
-                      calendarBuilders: CalendarBuilders(
-                        dowBuilder: (context, day) {
-                          final weekdays = ['一', '二', '三', '四', '五', '六', '日'];
-                          final weekdayIndex = day.weekday - 1;
-                          final isWeekend = day.weekday == 6 || day.weekday == 7;
-
-                          return Center(
-                            child: Text(
-                              weekdays[weekdayIndex],
-                              style: TextStyle(
-                                color: isWeekend
-                                    ? colors.calendarWeekendText
-                                    : colors.calendarWeekdayText,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          );
-                        },
-                        defaultBuilder: (context, day, focusedDay) {
-                          final normalizedDay = DateTime(day.year, day.month, day.day);
-                          final imagePath = _monthFirstImageCache[normalizedDay];
-                          final canRenderImage = imagePath != null &&
-                              widget.calendarImageRenderingEnabled &&
-                              _progressiveImageDayKeys.contains(_dayKey(normalizedDay));
-                          return RepaintBoundary(
-                            child: HomeCalendarDayCell(
-                              day: day,
-                              imagePath: canRenderImage ? imagePath : null,
-                              calendarImageRenderingEnabled: canRenderImage,
-                              isToday: false,
-                              isSelected: false,
-                              getCachedImageFile: _getCachedImageFile,
-                            ),
-                          );
-                        },
-                        todayBuilder: (context, day, focusedDay) {
-                          final normalizedDay = DateTime(day.year, day.month, day.day);
-                          final imagePath = _monthFirstImageCache[normalizedDay];
-                          final canRenderImage = imagePath != null &&
-                              widget.calendarImageRenderingEnabled &&
-                              _progressiveImageDayKeys.contains(_dayKey(normalizedDay));
-                          return RepaintBoundary(
-                            child: HomeCalendarDayCell(
-                              day: day,
-                              imagePath: canRenderImage ? imagePath : null,
-                              calendarImageRenderingEnabled: canRenderImage,
-                              isToday: true,
-                              isSelected: false,
-                              getCachedImageFile: _getCachedImageFile,
-                            ),
-                          );
-                        },
-                        selectedBuilder: (context, day, focusedDay) {
-                          final normalizedDay = DateTime(day.year, day.month, day.day);
-                          final imagePath = _monthFirstImageCache[normalizedDay];
-                          final canRenderImage = imagePath != null &&
-                              widget.calendarImageRenderingEnabled &&
-                              _progressiveImageDayKeys.contains(_dayKey(normalizedDay));
-                          return RepaintBoundary(
-                            child: HomeCalendarDayCell(
-                              day: day,
-                              imagePath: canRenderImage ? imagePath : null,
-                              calendarImageRenderingEnabled: canRenderImage,
-                              isToday: false,
-                              isSelected: true,
-                              getCachedImageFile: _getCachedImageFile,
-                            ),
-                          );
-                        },
-                        outsideBuilder: (context, day, focusedDay) {
-                          final normalizedDay = DateTime(day.year, day.month, day.day);
-                          final imagePath = _monthFirstImageCache[normalizedDay];
-                          final canRenderImage = imagePath != null &&
-                              widget.calendarImageRenderingEnabled &&
-                              _progressiveImageDayKeys.contains(_dayKey(normalizedDay));
-                          return RepaintBoundary(
-                            child: HomeCalendarDayCell(
-                              day: day,
-                              imagePath: canRenderImage ? imagePath : null,
-                              calendarImageRenderingEnabled: canRenderImage,
-                              isToday: false,
-                              isSelected: false,
-                              isOutside: true,
-                              getCachedImageFile: _getCachedImageFile,
-                            ),
-                          );
-                        },
-                        disabledBuilder: (context, day, focusedDay) {
-                          final normalizedDay = DateTime(day.year, day.month, day.day);
-                          final imagePath = _monthFirstImageCache[normalizedDay];
-                          final canRenderImage = imagePath != null &&
-                              widget.calendarImageRenderingEnabled &&
-                              _progressiveImageDayKeys.contains(_dayKey(normalizedDay));
-                          return RepaintBoundary(
-                            child: HomeCalendarDayCell(
-                              day: day,
-                              imagePath: canRenderImage ? imagePath : null,
-                              calendarImageRenderingEnabled: canRenderImage,
-                              isToday: false,
-                              isSelected: false,
-                              isDisabled: true,
-                              getCachedImageFile: _getCachedImageFile,
-                            ),
-                          );
-                        },
-                      ),
                     ),
                   ),
                 );

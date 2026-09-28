@@ -49,10 +49,7 @@ class HomeCalendarEntryCard extends StatelessWidget {
                 children: [
                   Text(
                     _getWeekdayName(date),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colors.textMuted,
-                    ),
+                    style: TextStyle(fontSize: 12, color: colors.textMuted),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -99,12 +96,17 @@ class _DrawerDiaryCard extends StatelessWidget {
     final imagePath = hasImage ? entry.images.first : null;
     final cardColor = colors.surfaceCard;
     final tagTextColor = colors.textSecondary;
+    final mood = entry.mood?.trim() ?? '';
+    final weather = entry.weather?.trim() ?? '';
+    final hasMood = mood.isNotEmpty;
+    final hasWeather = weather.isNotEmpty;
     final weightTextRaw = entry.weight?.trim() ?? '';
     final hasWeight = weightTextRaw.isNotEmpty;
     final weightText = hasWeight
-        ? ((weightTextRaw.toLowerCase().endsWith('kg') || weightTextRaw.endsWith('公斤'))
-            ? weightTextRaw
-            : '${weightTextRaw}kg')
+        ? ((weightTextRaw.toLowerCase().endsWith('kg') ||
+                  weightTextRaw.endsWith('公斤'))
+              ? weightTextRaw
+              : '${weightTextRaw}kg')
         : '';
     final shadowColor = colors.shadowSoft;
 
@@ -126,112 +128,119 @@ class _DrawerDiaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (hasImage && imagePath != null)
-            AspectRatio(
-              aspectRatio: 1.15,
-              child: Image.file(
-                getCachedImageFile(imagePath)!,
-                fit: BoxFit.cover,
-                cacheWidth: 320,
-                alignment: Alignment.center,
-                filterQuality: FilterQuality.low,
-                frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                  return ColoredBox(
-                    color: colors.imagePlaceholder,
-                    child: SizedBox.expand(child: child),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return ColoredBox(
-                    color: colors.imagePlaceholderStrong,
-                    child: Icon(
-                      Icons.image_not_supported,
-                      color: colors.iconMuted,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final cacheWidth =
+                    (constraints.maxWidth * MediaQuery.devicePixelRatioOf(context))
+                        .round();
+                return AspectRatio(
+                  aspectRatio: 1.15,
+                  child: Image.file(
+                    getCachedImageFile(imagePath)!,
+                    fit: BoxFit.cover,
+                    cacheWidth: cacheWidth,
+                    alignment: Alignment.center,
+                    filterQuality: FilterQuality.low,
+                    frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                      return ColoredBox(
+                        color: colors.imagePlaceholder,
+                        child: SizedBox.expand(child: child),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return ColoredBox(
+                        color: colors.imagePlaceholderStrong,
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: colors.iconMuted,
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+          if (!hasImage || hasMood || hasWeather || hasWeight)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: colors.surfaceInset,
+                borderRadius: hasImage
+                    ? const BorderRadius.vertical(bottom: Radius.circular(12))
+                    : BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  if (hasMood)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (MoodIcons.getIcon(mood) != null) ...[
+                          Icon(
+                            MoodIcons.getIcon(mood)!,
+                            size: 14,
+                            color: tagTextColor,
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          mood,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: tagTextColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                },
+                  if (hasMood && hasWeather) const SizedBox(width: 12),
+                  if (hasWeather)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (WeatherIcons.getIcon(weather) != null) ...[
+                          Icon(
+                            WeatherIcons.getIcon(weather)!,
+                            size: 14,
+                            color: tagTextColor,
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          weather,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: tagTextColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  if ((hasWeather || hasMood) && hasWeight)
+                    const SizedBox(width: 12),
+                  if (hasWeight)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.monitor_weight_outlined,
+                          size: 14,
+                          color: tagTextColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          weightText,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: tagTextColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
               ),
             ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: colors.surfaceInset,
-              borderRadius: hasImage
-                  ? const BorderRadius.vertical(bottom: Radius.circular(12))
-                  : BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                if (entry.mood != null)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (MoodIcons.getIcon(entry.mood!) != null) ...[
-                        Icon(
-                          MoodIcons.getIcon(entry.mood!)!,
-                          size: 14,
-                          color: tagTextColor,
-                        ),
-                        const SizedBox(width: 4),
-                      ],
-                      Text(
-                        entry.mood!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: tagTextColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                if (entry.mood != null && entry.weather != null)
-                  const SizedBox(width: 12),
-                if (entry.weather != null)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (WeatherIcons.getIcon(entry.weather!) != null) ...[
-                        Icon(
-                          WeatherIcons.getIcon(entry.weather!)!,
-                          size: 14,
-                          color: tagTextColor,
-                        ),
-                        const SizedBox(width: 4),
-                      ],
-                      Text(
-                        entry.weather!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: tagTextColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                if ((entry.weather != null || entry.mood != null) && hasWeight)
-                  const SizedBox(width: 12),
-                if (hasWeight)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.monitor_weight_outlined,
-                        size: 14,
-                        color: tagTextColor,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        weightText,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: tagTextColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          ),
         ],
       ),
     );

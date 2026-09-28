@@ -30,12 +30,13 @@ class HomeCalendarDayCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
+    final isActive = isSelected || isToday;
     final textColor = isDisabled
         ? colors.calendarDayDisabledText
         : isOutside
             ? colors.calendarDayOutsideText
-            : isSelected
-                ? theme.colorScheme.onPrimary
+            : isActive
+                ? colors.calendarControlText
                 : theme.colorScheme.onSurface;
 
     Widget dayWidget = AspectRatio(
@@ -44,18 +45,14 @@ class HomeCalendarDayCell extends StatelessWidget {
         margin: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: isSelected
-              ? theme.colorScheme.primary
-              : isToday
-                  ? theme.colorScheme.primaryContainer
-                  : Colors.transparent,
+          color: isActive ? colors.calendarControlBackground : Colors.transparent,
         ),
         child: Center(
           child: Text(
             '${day.day}',
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
               color: textColor,
             ),
           ),
@@ -69,15 +66,9 @@ class HomeCalendarDayCell extends StatelessWidget {
         aspectRatio: 1,
         child: Container(
           margin: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: isSelected
-                ? Border.all(
-                    color: theme.colorScheme.primary,
-                    width: 2,
-                  )
-                : null,
-          ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+        ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: Stack(
@@ -86,27 +77,32 @@ class HomeCalendarDayCell extends StatelessWidget {
                 Image.file(
                   cachedFile!,
                   fit: BoxFit.cover,
-                  cacheWidth: 72,
+                  cacheWidth:
+                      (MediaQuery.sizeOf(context).width / 7 *
+                              MediaQuery.devicePixelRatioOf(context))
+                          .round(),
                   filterQuality: FilterQuality.none,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       color: isToday
-                          ? theme.colorScheme.primaryContainer
+                          ? colors.calendarControlBackground
                           : colors.imagePlaceholderStrong,
                     );
                   },
                 ),
                 Container(
                   color: isSelected
-                      ? theme.colorScheme.primary.withValues(alpha: 0.3)
-                      : colors.scrim.withValues(alpha: 0.2),
+                      ? colors.scrim.withValues(alpha: 0.12)
+                      : colors.scrim.withValues(alpha: 0.06),
                 ),
                 Center(
                   child: Text(
                     '${day.day}',
                     style: TextStyle(
                       fontSize: 16,
-                      color: theme.colorScheme.onPrimary,
+                      color: Colors.white.withValues(
+                        alpha: isSelected ? 0.85 : 0.68,
+                      ),
                       fontWeight: FontWeight.w700,
                       shadows: [
                         Shadow(

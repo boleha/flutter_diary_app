@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/diary_entry.dart';
 import '../models/write_diary_form_snapshot.dart';
 import '../services/storage_service.dart';
+import '../services/motion_photo_service.dart';
 import '../services/theme_service.dart' show ThemeService, ImageStorageMode;
 import '../theme/app_colors.dart';
 import '../widgets/app_ui.dart';
@@ -42,7 +44,8 @@ class _WriteDiaryScreenState extends State<WriteDiaryScreen> {
   final _formKey = GlobalKey<FormState>();
   final _contentFieldKey = GlobalKey();
   final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier<bool>(false);
-  final ValueNotifier<List<String>> _imagesNotifier = ValueNotifier<List<String>>(const []);
+  final ValueNotifier<List<String>> _imagesNotifier =
+      ValueNotifier<List<String>>(const []);
   late final Widget _topExtrasChild;
   late WriteDiaryFormSnapshot _initialSnapshot;
   String? _timestampTextCache;
@@ -63,7 +66,9 @@ class _WriteDiaryScreenState extends State<WriteDiaryScreen> {
       _weatherController.text = widget.existingEntry!.weather ?? '';
       _weightController.text = widget.existingEntry!.weight ?? '';
       _setImages(widget.existingEntry!.images);
-      _initialSnapshot = WriteDiaryFormSnapshot.fromEntry(widget.existingEntry!);
+      _initialSnapshot = WriteDiaryFormSnapshot.fromEntry(
+        widget.existingEntry!,
+      );
       _timestampTextCache =
           '创建于 ${DateFormat('yyyy/MM/dd HH:mm:ss').format(widget.existingEntry!.createdAt)}  修改于 ${DateFormat('yyyy/MM/dd HH:mm:ss').format(widget.existingEntry!.updatedAt)}';
     } else {
@@ -142,17 +147,25 @@ class _WriteDiaryScreenState extends State<WriteDiaryScreen> {
     try {
       final ImagePicker picker = ImagePicker();
       final List<XFile> images = await picker.pickMultiImage(
-        imageQuality: 85,
+        // Android 动态照片的视频附在原始 JPEG 后，选择时不能重新编码。
+        imageQuality: defaultTargetPlatform == TargetPlatform.android
+            ? 100
+            : 85,
       );
 
       if (images.isNotEmpty) {
         final storageMode = _themeService.imageStorageMode;
-        
+
         for (var image in images) {
           if (!_images.contains(image.path)) {
-            if (storageMode == ImageStorageMode.copy) {
+            final isMotionPhoto =
+                defaultTargetPlatform == TargetPlatform.android &&
+                await MotionPhotoService.inspect(image.path) != null;
+            if (storageMode == ImageStorageMode.copy || isMotionPhoto) {
               // 复制到应用文件夹
-              final copiedPath = await _storageService.copyImageToAppDirectory(image.path);
+              final copiedPath = await _storageService.copyImageToAppDirectory(
+                image.path,
+              );
               if (copiedPath != null) {
                 _updateImages((nextImages) {
                   if (!nextImages.contains(copiedPath)) {
@@ -183,11 +196,7 @@ class _WriteDiaryScreenState extends State<WriteDiaryScreen> {
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
-    AppTopToast.show(
-      context,
-      message,
-      isError: isError,
-    );
+    AppTopToast.show(context, message, isError: isError);
   }
 
   void _deleteImageAt(int index) {
@@ -212,7 +221,6 @@ class _WriteDiaryScreenState extends State<WriteDiaryScreen> {
     return WriteDiaryHeader(
       selectedDate: widget.selectedDate,
       isLoadingListenable: _isLoadingNotifier,
-      onBack: _handleBack,
       onSave: _saveDiary,
     );
   }
@@ -301,7 +309,9 @@ class _WriteDiaryScreenState extends State<WriteDiaryScreen> {
   DiaryEntry _buildEntryForSave(DateTime now) {
     final content = _contentController.text.trim();
     return DiaryEntry(
-      id: widget.existingEntry?.id ?? '${now.millisecondsSinceEpoch}_${now.microsecondsSinceEpoch % 1000}',
+      id:
+          widget.existingEntry?.id ??
+          '${now.millisecondsSinceEpoch}_${now.microsecondsSinceEpoch % 1000}',
       date: widget.selectedDate,
       title: _buildAutoTitle(content),
       content: content,
@@ -397,54 +407,60 @@ class _WriteDiaryScreenState extends State<WriteDiaryScreen> {
         ? (1 - (keyboardInset / keyboardFullInset)).clamp(0.0, 1.0).toDouble()
         : 1.0;
 
-    return Scaffold(
-      // 启用键盘避让，避免输入框被软键盘遮挡
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // 顶部区域 - 固定不滚动
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildAppBar(),
-                    const SizedBox(height: 4),
-                    IgnorePointer(
-                      ignoring: topExtrasVisibility < 0.99,
-                      child: ClipRect(
-                        child: Align(
-                          alignment: Alignment.topCenter,
-                          heightFactor: topExtrasVisibility,
-                          child: Opacity(
-                            opacity: topExtrasVisibility,
-                            child: _topExtrasChild,
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_handleBack());
+      },
+      child: Scaffold(
+        // 启用键盘避让，避免输入框被软键盘遮挡
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                // 顶部区域 - 固定不滚动
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildAppBar(),
+                      const SizedBox(height: 4),
+                      IgnorePointer(
+                        ignoring: topExtrasVisibility < 0.99,
+                        child: ClipRect(
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            heightFactor: topExtrasVisibility,
+                            child: Opacity(
+                              opacity: topExtrasVisibility,
+                              child: _topExtrasChild,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              // 内容区域 - 可滚动，使用 Expanded 填充剩余空间
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(child: _buildContentSection()),
-                      const SizedBox(height: 8),
-                      _buildTimestampSection(),
                     ],
                   ),
                 ),
-              ),
-            ],
+                // 内容区域 - 可滚动，使用 Expanded 填充剩余空间
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(child: _buildContentSection()),
+                        const SizedBox(height: 8),
+                        _buildTimestampSection(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -463,7 +479,11 @@ class _TimeHighlightController extends TextEditingController {
   bool? _lastIsDark;
 
   @override
-  TextSpan buildTextSpan({required BuildContext context, TextStyle? style, required bool withComposing}) {
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
     final String text = this.text;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -504,31 +524,32 @@ class _TimeHighlightController extends TextEditingController {
     for (final Match match in _timeRegex.allMatches(text)) {
       // 添加时间前的普通文本
       if (match.start > lastMatchEnd) {
-        spans.add(TextSpan(
-          text: text.substring(lastMatchEnd, match.start),
-          style: style,
-        ));
+        spans.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: style,
+          ),
+        );
       }
 
       // 添加时间纯文本样式
       final timeText = match.group(0)!;
-      spans.add(TextSpan(
-        text: timeText,
-        style: (style ?? const TextStyle()).copyWith(
-          color: timeColor,
-          fontWeight: FontWeight.w500,
+      spans.add(
+        TextSpan(
+          text: timeText,
+          style: (style ?? const TextStyle()).copyWith(
+            color: timeColor,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-      ));
+      );
 
       lastMatchEnd = match.end;
     }
 
     // 添加剩余文本
     if (lastMatchEnd < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(lastMatchEnd),
-        style: style,
-      ));
+      spans.add(TextSpan(text: text.substring(lastMatchEnd), style: style));
     }
 
     // 如果没有匹配到时间，返回普通文本

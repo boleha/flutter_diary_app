@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(adb devices *)",
+      "Bash(dir lib\\\\main.dart)",
+      "Bash(flutter emulators *)",
+      "Bash(flutter devices *)",
+      "Bash(\"C:/Users/Admin/AppData/Local/Android/sdk/platform-tools/adb.exe\" devices *)",
+      "Bash(\"C:/Users/Admin/AppData/Local/Android/sdk/platform-tools/adb.exe\" -s emulator-5554 shell getprop sys.boot_completed)"
+    ]
+  }
+}

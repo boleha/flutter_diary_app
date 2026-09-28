@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
@@ -5,18 +6,42 @@ import 'app_colors.dart';
 class AppTheme {
   const AppTheme._();
 
+  static ColorScheme _colorScheme(AppColors colors, Brightness brightness) {
+    return ColorScheme.fromSeed(
+      seedColor: colors.actionPrimaryBackground,
+      brightness: brightness,
+    ).copyWith(
+      primary: colors.actionPrimaryBackground,
+      onPrimary: colors.actionPrimaryForeground,
+      primaryContainer: colors.calendarControlBackground,
+      onPrimaryContainer: colors.calendarControlText,
+      secondary: colors.actionPrimaryBackground,
+      onSecondary: colors.actionPrimaryForeground,
+      secondaryContainer: colors.surfaceSubtle,
+      onSecondaryContainer: colors.textPrimary,
+      tertiary: colors.actionPrimaryBackground,
+      onTertiary: colors.actionPrimaryForeground,
+      surface: colors.surface,
+      onSurface: colors.textPrimary,
+      onSurfaceVariant: colors.textSecondary,
+      outline: colors.outlineStrong,
+      outlineVariant: colors.outline,
+      error: colors.danger,
+      onError: colors.actionPrimaryForeground,
+      surfaceContainerLowest: colors.background,
+      surfaceContainerLow: colors.surface,
+      surfaceContainer: colors.surfaceMuted,
+      surfaceContainerHigh: colors.surfaceSubtle,
+      surfaceContainerHighest: colors.surfaceCard,
+      surfaceTint: Colors.transparent,
+    );
+  }
+
   static ThemeData buildLightTheme() {
     final colors = AppColors.light;
     return ThemeData(
       scaffoldBackgroundColor: colors.background,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: colors.actionPrimaryBackground,
-        brightness: Brightness.light,
-      ).copyWith(
-        surface: colors.surface,
-        onSurface: colors.textPrimary,
-        surfaceTint: Colors.transparent,
-      ),
+      colorScheme: _colorScheme(colors, Brightness.light),
       useMaterial3: true,
       extensions: [colors],
       appBarTheme: AppBarTheme(
@@ -43,18 +68,9 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.surfaceSubtle,
-        hintStyle: TextStyle(
-          color: colors.textMuted,
-          fontSize: 14,
-        ),
-        labelStyle: TextStyle(
-          color: colors.textMuted,
-          fontSize: 14,
-        ),
-        floatingLabelStyle: TextStyle(
-          color: colors.textMuted,
-          fontSize: 12,
-        ),
+        hintStyle: TextStyle(color: colors.textMuted, fontSize: 14),
+        labelStyle: TextStyle(color: colors.textMuted, fontSize: 14),
+        floatingLabelStyle: TextStyle(color: colors.textMuted, fontSize: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -65,7 +81,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colors.actionPrimaryBackground, width: 1),
+          borderSide: BorderSide(
+            color: colors.actionPrimaryBackground,
+            width: 1,
+          ),
         ),
       ),
     );
@@ -75,12 +94,7 @@ class AppTheme {
     final colors = AppColors.dark;
     return ThemeData(
       scaffoldBackgroundColor: colors.background,
-      colorScheme: ColorScheme.dark(
-        surface: colors.surface,
-        primary: colors.actionPrimaryBackground,
-        secondary: colors.outlineStrong,
-        onSurface: colors.textPrimary,
-      ),
+      colorScheme: _colorScheme(colors, Brightness.dark),
       useMaterial3: true,
       extensions: [colors],
       appBarTheme: AppBarTheme(
@@ -107,18 +121,9 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.surfaceSubtle,
-        hintStyle: TextStyle(
-          color: colors.textMuted,
-          fontSize: 14,
-        ),
-        labelStyle: TextStyle(
-          color: colors.textMuted,
-          fontSize: 14,
-        ),
-        floatingLabelStyle: TextStyle(
-          color: colors.textMuted,
-          fontSize: 12,
-        ),
+        hintStyle: TextStyle(color: colors.textMuted, fontSize: 14),
+        labelStyle: TextStyle(color: colors.textMuted, fontSize: 14),
+        floatingLabelStyle: TextStyle(color: colors.textMuted, fontSize: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

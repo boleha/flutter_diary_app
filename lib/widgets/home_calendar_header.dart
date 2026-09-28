@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import 'app_ui.dart';
 
 class HomeCalendarHeader extends StatelessWidget {
   final DateTime focusedDay;
@@ -24,9 +25,10 @@ class HomeCalendarHeader extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
+            decoration: AppUi.neumorphicDecoration(
+              context,
+              radius: 10,
               color: colors.calendarControlBackground,
-              borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<int>(
@@ -65,9 +67,10 @@ class HomeCalendarHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
+            decoration: AppUi.neumorphicDecoration(
+              context,
+              radius: 10,
               color: colors.calendarControlBackground,
-              borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<int>(
@@ -104,16 +107,20 @@ class HomeCalendarHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          IconButton(
-            onPressed: onGoToToday,
-            icon: Icon(
-              Icons.my_location,
-              size: 20,
-              color: colors.calendarControlIcon,
+          NeumorphicSurface(
+            radius: 10,
+            color: colors.calendarControlBackground,
+            child: IconButton(
+              onPressed: onGoToToday,
+              icon: Icon(
+                Icons.my_location,
+                size: 20,
+                color: colors.calendarControlIcon,
+              ),
+              tooltip: '定位到今天',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 40, height: 40),
             ),
-            tooltip: '定位到今天',
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(),
           ),
         ],
       ),

@@ -1,9 +1,10 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'theme/app_theme.dart';
-import 'screens/splash_screen.dart';
+import 'screens/home_screen.dart';
 import 'services/theme_service.dart';
 import 'services/storage_service.dart';
 import 'services/notification_service.dart';
@@ -31,7 +32,7 @@ void main() async {
 }
 
 void _setHighRefreshRate() {
-  if (Platform.isAndroid) {
+  if (!kIsWeb && Platform.isAndroid) {
     // Android: 尝试设置为最高刷新率
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -103,7 +104,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       theme: AppTheme.buildLightTheme(),
       darkTheme: AppTheme.buildDarkTheme(),
       themeMode: _themeService.flutterThemeMode,
-      home: const SplashScreen(),
+      home: const HomeScreen(),
       // 性能优化：减少不必要的重建
       builder: (context, child) {
         return MediaQuery(

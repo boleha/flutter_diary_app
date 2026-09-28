@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:video_player/video_player.dart';
 import '../services/gallery_service.dart';
+import '../services/motion_photo_service.dart';
 import '../theme/app_colors.dart';
 import 'app_top_toast.dart';
+import 'motion_photo_overlay_controls.dart';
 
 class ImageGalleryScreen extends StatefulWidget {
   final List<String> images;
@@ -29,6 +32,9 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
   late int _currentIndex;
   late List<String> _images;
   bool _isSaving = false;
+  bool _isLoadingMotion = false;
+  MotionPhoto? _motionPhoto;
+  VideoPlayerController? _motionController;
 
   @override
   void initState() {
@@ -36,12 +42,104 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
     _currentIndex = widget.initialIndex;
     _images = List<String>.from(widget.images);
     _pageController = PageController(initialPage: widget.initialIndex);
+    _loadMotionPhoto();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _motionController?.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadMotionPhoto() async {
+    if (_images.isEmpty) return;
+    final imagePath = _images[_currentIndex];
+    final motionPhoto = await MotionPhotoService.inspect(imagePath);
+    if (!mounted || _images.isEmpty || _images[_currentIndex] != imagePath) {
+      return;
+    }
+    setState(() => _motionPhoto = motionPhoto);
+  }
+
+  Future<void> _playMotionPhoto() async {
+    final motionPhoto = _motionPhoto;
+    if (motionPhoto == null || _isLoadingMotion) return;
+    final imagePath = _images[_currentIndex];
+    final existing = _motionController;
+    if (existing != null) {
+      if (existing.value.isPlaying) {
+        await existing.pause();
+      } else {
+        if (existing.value.position >= existing.value.duration) {
+          await existing.seekTo(Duration.zero);
+        }
+        await existing.play();
+      }
+      if (mounted) setState(() {});
+      return;
+    }
+
+    await _prepareMotionPhotoForScrubbing();
+    if (!mounted || _images[_currentIndex] != imagePath) return;
+    final controller = _motionController;
+    if (controller == null) return;
+    if (controller.value.position >= controller.value.duration) {
+      await controller.seekTo(Duration.zero);
+    }
+    await controller.play();
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _playMotionPhotoFromImage() async {
+    if (_motionController?.value.isPlaying == true) return;
+    await _playMotionPhoto();
+  }
+
+  Future<void> _prepareMotionPhotoForScrubbing() async {
+    final motionPhoto = _motionPhoto;
+    if (_motionController != null ||
+        _isLoadingMotion ||
+        motionPhoto == null ||
+        _images.isEmpty) {
+      return;
+    }
+
+    final imagePath = _images[_currentIndex];
+    setState(() => _isLoadingMotion = true);
+    VideoPlayerController? controller;
+    try {
+      final videoPath = await MotionPhotoService.extractVideo(
+        imagePath,
+        motionPhoto,
+      );
+      controller = VideoPlayerController.file(File(videoPath));
+      await controller.initialize();
+      if (!mounted || _images[_currentIndex] != imagePath) {
+        await controller.dispose();
+        return;
+      }
+      setState(() => _motionController = controller);
+    } catch (_) {
+      await controller?.dispose();
+      if (mounted && _images[_currentIndex] == imagePath) {
+        setState(() => _motionController = null);
+        AppTopToast.show(context, '动态照片加载失败', isError: true);
+      }
+    } finally {
+      if (mounted && _images[_currentIndex] == imagePath) {
+        setState(() => _isLoadingMotion = false);
+      }
+    }
+  }
+
+  void _resetMotionPhoto() {
+    final controller = _motionController;
+    _motionController = null;
+    _motionPhoto = null;
+    _isLoadingMotion = false;
+    if (controller != null) controller.dispose();
+    _loadMotionPhoto();
   }
 
   // 删除当前图片
@@ -100,6 +198,7 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
     if (_currentIndex >= _images.length) {
       _currentIndex = _images.length - 1;
     }
+    _resetMotionPhoto();
   }
 
   Future<void> _saveCurrentImage() async {
@@ -146,16 +245,39 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
               setState(() {
                 _currentIndex = index;
               });
+              _resetMotionPhoto();
             },
             itemBuilder: (context, index) {
-              return PhotoView(
-                imageProvider: FileImage(File(_images[index])),
-                minScale: PhotoViewComputedScale.contained,
-                maxScale: PhotoViewComputedScale.covered * 3,
-                heroAttributes: PhotoViewHeroAttributes(tag: 'image_$index'),
-                backgroundDecoration: BoxDecoration(
-                  color: colors.scrim,
-                ),
+              final controller =
+                  index == _currentIndex ? _motionController : null;
+              final Widget image;
+              if (controller != null && controller.value.isInitialized) {
+                image = Center(
+                  child: AspectRatio(
+                    aspectRatio: controller.value.aspectRatio,
+                    child: VideoPlayer(controller),
+                  ),
+                );
+              } else {
+                image = PhotoView(
+                  imageProvider: FileImage(File(_images[index])),
+                  minScale: PhotoViewComputedScale.contained,
+                  maxScale: PhotoViewComputedScale.covered * 3,
+                  heroAttributes: PhotoViewHeroAttributes(tag: 'image_$index'),
+                  backgroundDecoration: BoxDecoration(color: colors.scrim),
+                );
+              }
+              return MotionPhotoOverlayControls(
+                key: ValueKey(_images[index]),
+                isMotionPhoto:
+                    index == _currentIndex && _motionPhoto != null,
+                isLoading: index == _currentIndex && _isLoadingMotion,
+                controller: controller,
+                onTogglePlayback: _playMotionPhoto,
+                onImageLongPress: _playMotionPhotoFromImage,
+                onPrepareScrubbing: _prepareMotionPhotoForScrubbing,
+                bottom: _images.length > 1 ? 78 : 40,
+                child: image,
               );
             },
           ),

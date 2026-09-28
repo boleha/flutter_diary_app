@@ -74,14 +74,17 @@ class AppColors extends ThemeExtension<AppColors> {
 
   static AppColors of(BuildContext context) {
     final colors = Theme.of(context).extension<AppColors>();
-    assert(colors != null, 'AppColors is not configured on the current ThemeData.');
+    assert(
+      colors != null,
+      'AppColors is not configured on the current ThemeData.',
+    );
     return colors!;
   }
 
   static final AppColors light = AppColors(
-    background: Colors.white,
+    background: const Color(0xFFF2F4F7),
     surface: Colors.white,
-    surfaceMuted: Colors.grey[50]!,
+    surfaceMuted: const Color(0xFFF6F7F9),
     surfaceSubtle: Colors.grey[100]!,
     surfaceInset: Colors.grey[50]!,
     surfaceCard: Colors.white,
@@ -93,7 +96,7 @@ class AppColors extends ThemeExtension<AppColors> {
     iconMuted: Colors.grey[600]!,
     imagePlaceholder: Colors.grey[100]!,
     imagePlaceholderStrong: Colors.grey[200]!,
-    calendarControlBackground: Colors.grey[200]!,
+    calendarControlBackground: const Color(0xFFF6F7F9),
     calendarControlText: Colors.grey[700]!,
     calendarControlIcon: Colors.grey[600]!,
     calendarWeekdayText: Colors.grey[800]!,
@@ -135,7 +138,7 @@ class AppColors extends ThemeExtension<AppColors> {
     calendarWeekdayText: Colors.grey[400]!,
     calendarWeekendText: Colors.grey[500]!,
     calendarDayOutsideText: Colors.grey[400]!,
-    calendarDayDisabledText: Colors.grey[300]!,
+    calendarDayDisabledText: Colors.grey[700]!,
     calendarDivider: Colors.grey[700]!,
     actionPrimaryBackground: Colors.grey[700]!,
     actionPrimaryForeground: Colors.white,
@@ -200,7 +203,8 @@ class AppColors extends ThemeExtension<AppColors> {
       textMuted: textMuted ?? this.textMuted,
       iconMuted: iconMuted ?? this.iconMuted,
       imagePlaceholder: imagePlaceholder ?? this.imagePlaceholder,
-      imagePlaceholderStrong: imagePlaceholderStrong ?? this.imagePlaceholderStrong,
+      imagePlaceholderStrong:
+          imagePlaceholderStrong ?? this.imagePlaceholderStrong,
       calendarControlBackground:
           calendarControlBackground ?? this.calendarControlBackground,
       calendarControlText: calendarControlText ?? this.calendarControlText,
@@ -247,22 +251,41 @@ class AppColors extends ThemeExtension<AppColors> {
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
       textMuted: Color.lerp(textMuted, other.textMuted, t)!,
       iconMuted: Color.lerp(iconMuted, other.iconMuted, t)!,
-      imagePlaceholder: Color.lerp(imagePlaceholder, other.imagePlaceholder, t)!,
-      imagePlaceholderStrong:
-          Color.lerp(imagePlaceholderStrong, other.imagePlaceholderStrong, t)!,
+      imagePlaceholder: Color.lerp(
+        imagePlaceholder,
+        other.imagePlaceholder,
+        t,
+      )!,
+      imagePlaceholderStrong: Color.lerp(
+        imagePlaceholderStrong,
+        other.imagePlaceholderStrong,
+        t,
+      )!,
       calendarControlBackground: Color.lerp(
         calendarControlBackground,
         other.calendarControlBackground,
         t,
       )!,
-      calendarControlText:
-          Color.lerp(calendarControlText, other.calendarControlText, t)!,
-      calendarControlIcon:
-          Color.lerp(calendarControlIcon, other.calendarControlIcon, t)!,
-      calendarWeekdayText:
-          Color.lerp(calendarWeekdayText, other.calendarWeekdayText, t)!,
-      calendarWeekendText:
-          Color.lerp(calendarWeekendText, other.calendarWeekendText, t)!,
+      calendarControlText: Color.lerp(
+        calendarControlText,
+        other.calendarControlText,
+        t,
+      )!,
+      calendarControlIcon: Color.lerp(
+        calendarControlIcon,
+        other.calendarControlIcon,
+        t,
+      )!,
+      calendarWeekdayText: Color.lerp(
+        calendarWeekdayText,
+        other.calendarWeekdayText,
+        t,
+      )!,
+      calendarWeekendText: Color.lerp(
+        calendarWeekendText,
+        other.calendarWeekendText,
+        t,
+      )!,
       calendarDayOutsideText: Color.lerp(
         calendarDayOutsideText,
         other.calendarDayOutsideText,
@@ -273,8 +296,7 @@ class AppColors extends ThemeExtension<AppColors> {
         other.calendarDayDisabledText,
         t,
       )!,
-      calendarDivider:
-          Color.lerp(calendarDivider, other.calendarDivider, t)!,
+      calendarDivider: Color.lerp(calendarDivider, other.calendarDivider, t)!,
       actionPrimaryBackground: Color.lerp(
         actionPrimaryBackground,
         other.actionPrimaryBackground,
@@ -288,11 +310,17 @@ class AppColors extends ThemeExtension<AppColors> {
       danger: Color.lerp(danger, other.danger, t)!,
       success: Color.lerp(success, other.success, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
-      warningBackground:
-          Color.lerp(warningBackground, other.warningBackground, t)!,
+      warningBackground: Color.lerp(
+        warningBackground,
+        other.warningBackground,
+        t,
+      )!,
       toastBackground: Color.lerp(toastBackground, other.toastBackground, t)!,
-      toastErrorBackground:
-          Color.lerp(toastErrorBackground, other.toastErrorBackground, t)!,
+      toastErrorBackground: Color.lerp(
+        toastErrorBackground,
+        other.toastErrorBackground,
+        t,
+      )!,
       toastForeground: Color.lerp(toastForeground, other.toastForeground, t)!,
       scrim: Color.lerp(scrim, other.scrim, t)!,
       shadowSoft: Color.lerp(shadowSoft, other.shadowSoft, t)!,

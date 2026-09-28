@@ -13,7 +13,6 @@ class HomeHeaderBar extends StatelessWidget {
   final VoidCallback onDateTap;
   final VoidCallback onLocateToday;
   final VoidCallback onOpenRecycleBin;
-  final VoidCallback onOpenAiChat;
   final VoidCallback onOpenSettings;
   final VoidCallback onClearSearch;
   final ValueChanged<String> onSearchChanged;
@@ -29,11 +28,28 @@ class HomeHeaderBar extends StatelessWidget {
     required this.onDateTap,
     required this.onLocateToday,
     required this.onOpenRecycleBin,
-    required this.onOpenAiChat,
     required this.onOpenSettings,
     required this.onClearSearch,
     required this.onSearchChanged,
   });
+
+  Widget _actionButton({
+    required Widget icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return NeumorphicSurface(
+      radius: 12,
+      child: IconButton(
+        icon: icon,
+        iconSize: 20,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 42, height: 42),
+        onPressed: onPressed,
+        tooltip: tooltip,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +156,7 @@ class HomeHeaderBar extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
+          _actionButton(
             icon: AnimatedSwitcher(
               duration: AppUi.fastDuration,
               child: Icon(
@@ -151,28 +167,20 @@ class HomeHeaderBar extends StatelessWidget {
             onPressed: onToggleSearch,
             tooltip: isSearching ? '关闭搜索' : '搜索',
           ),
-          IconButton(
+          const SizedBox(width: 6),
+          _actionButton(
             icon: const Icon(Icons.my_location),
             onPressed: onLocateToday,
             tooltip: '定位到今天',
           ),
-          IconButton(
+          const SizedBox(width: 6),
+          _actionButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: onOpenRecycleBin,
             tooltip: '回收站',
           ),
-          InkWell(
-            onTap: onOpenAiChat,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Image.asset(
-                'assets/images/txbb.png',
-                width: 24,
-                height: 24,
-              ),
-            ),
-          ),
-          IconButton(
+          const SizedBox(width: 6),
+          _actionButton(
             icon: const Icon(Icons.settings),
             onPressed: onOpenSettings,
             tooltip: '设置',

@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 
+import 'app_ui.dart';
+
 class SettingsActionItem {
   final IconData icon;
   final Color? iconColor;
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final VoidCallback onTap;
 
   const SettingsActionItem({
     required this.icon,
     this.iconColor,
     required this.title,
-    required this.subtitle,
+    this.subtitle,
     required this.onTap,
   });
 }
@@ -26,7 +28,7 @@ class SettingsActionGroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return NeumorphicSurface(
       child: Column(
         children: [
           for (int i = 0; i < items.length; i++) ...[
@@ -49,12 +51,8 @@ class _ActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(
-        item.icon,
-        color: item.iconColor ?? Theme.of(context).colorScheme.primary,
-      ),
       title: Text(item.title),
-      subtitle: Text(item.subtitle),
+      subtitle: item.subtitle == null ? null : Text(item.subtitle!),
       trailing: const Icon(Icons.chevron_right),
       onTap: item.onTap,
     );

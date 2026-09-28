@@ -9,10 +9,10 @@ import '../widgets/home_calendar_drawer.dart';
 import '../widgets/home_day_page_content.dart';
 import '../widgets/home_header_bar.dart';
 import '../widgets/home_search_results.dart';
+import 'diary_detail_screen.dart';
 import 'write_diary_screen.dart';
 import 'settings_screen.dart';
 import 'recycle_bin_screen.dart';
-import 'ai_chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -298,7 +298,13 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
       try {
-        await _navigateToWriteDiary(date, entry);
+        final saved = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DiaryDetailScreen(entry: entry),
+          ),
+        );
+        if (saved == true) unawaited(_loadEntries());
       } finally {
         _isOpeningDrawerEntry = false;
       }
@@ -445,14 +451,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (result == true) {
                     unawaited(_loadEntries());
                   }
-                },
-                onOpenAiChat: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AiChatScreen(),
-                    ),
-                  );
                 },
                 onOpenSettings: () async {
                   final result = await Navigator.push(

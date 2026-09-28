@@ -2,7 +2,7 @@ name: diary_app
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.1+2003
 
 environment:
   sdk: ^3.8.1
@@ -16,8 +16,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   # 本地存储
   shared_preferences: ^2.2.0
-  # 日历组件
-  table_calendar: ^3.0.9
   # 日期格式化
   intl: ^0.20.2
   # 图片选择器 - 使用最新版本
@@ -28,8 +26,7 @@ dependencies:
   google_fonts: ^6.1.0
   # 图片查看器
   photo_view: ^0.15.0
-  # 视频播放器
-  video_player: ^2.8.2
+  video_player: ^2.10.0
   # 文件选择器（用于导入导出）
   file_picker: ^8.0.0+1
   # 路径提供者
@@ -38,19 +35,14 @@ dependencies:
   share_plus: ^10.0.0
   # 压缩文件（用于导出图片）
   archive: ^3.4.10
-  # 打开文件/文件夹
-  open_filex: ^4.3.4
-  # 打开文件管理器
-  open_file_manager: ^2.0.0
+  # 图片处理（写日记时压缩存储）
+  image: ^4.3.0
   # 本地通知
   flutter_local_notifications: ^18.0.1
   # 时区支持（用于定时通知）
   timezone: ^0.10.0
-  # LangChain Dart 用于 AI 功能增强
-  langchain: ^0.7.7+2
-  langchain_openai: ^0.7.3+1
-  # 持久化数据库（用于向量存储）
-  sembast: ^3.8.4
+  # 本地数据库（日记存储）
+  sqflite: ^2.4.0
   path: ^1.9.0
   gallery_saver_plus: ^3.2.9
   # WebDAV 客户端
@@ -71,7 +63,6 @@ dependency_overrides:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/txbb.png
     - assets/images/APP_ICON.jpg
 
 # 应用图标配置
